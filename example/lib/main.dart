@@ -20,7 +20,10 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
+
   final _printPlugin = PrintPlugin();
+
+  bool couldUse = false;
 
   @override
   void initState() {
@@ -30,25 +33,35 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      // platformVersion =
-      //     await _printPlugin.getPlatformVersion() ?? 'Unknown platform version';
-      platformVersion =
-          await _printPlugin.getPlatformVersionTest() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
+    couldUse = await _printPlugin.initPrint();
+  }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
+  Future<void> printTest() async {
+    await _printPlugin.printTest();
+  }
 
-    setState(() {
-      _platformVersion = platformVersion;
+  Future<void> printText() async {
+    await _printPlugin.printText({
+      'paperWidth': 52,
+      'text':
+          '药品:阿莫西林胶囊\n有效期:2024-12-12\n规格:10mg\n车码:87hfsxzg92100\n位置:第一层\n批号:AM001\n数量:2'
+    });
+  }
+
+  Future<void> printQRCode() async {
+    await _printPlugin.printQRCode({
+      'paperWidth': 52,
+      'paperHeight': 40,
+      'size': 0,
+      'codeSize':380,
+      'data':
+          '药品:阿莫西林胶囊\n有效期:2024-12-12\n规格:10mg\n车码:87hfsxzg92100\n位置:第一层\n批号:AM001\n数量:2'
+    });
+  }
+
+  Future<void> labelEnable(bool enable) async {
+    await _printPlugin.labelEnable({
+      'enable': enable,
     });
   }
 
@@ -57,10 +70,138 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('打印'),
         ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+        body: Container(
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  log(couldUse.toString());
+                  if (couldUse == false) {
+                    return;
+                  }
+                  this.printTest();
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                  padding:
+                      EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '打印自检',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  log(couldUse.toString());
+                  if (couldUse == false) {
+                    return;
+                  }
+                  this.printText();
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                  padding:
+                      EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '打印文字',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  log(couldUse.toString());
+                  if (couldUse == false) {
+                    return;
+                  }
+                  this.labelEnable(true);
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                  padding:
+                      EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '开启黑标',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  log(couldUse.toString());
+                  if (couldUse == false) {
+                    return;
+                  }
+                  this.labelEnable(false);
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                  padding:
+                      EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '关闭黑标',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  log(couldUse.toString());
+                  if (couldUse == false) {
+                    return;
+                  }
+                  this.printQRCode();
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                  padding:
+                      EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '打印二维码',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

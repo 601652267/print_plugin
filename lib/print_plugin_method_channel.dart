@@ -21,4 +21,30 @@ class MethodChannelPrintPlugin extends PrintPluginPlatform {
     return version;
   }
 
+  Future<String?> initPrint() async {
+    final version = await methodChannel.invokeMethod<String>('initPrint');
+    return version;
+  }
+
+  Future<String?> printTest() async {
+    return await methodChannel.invokeMethod<String>('printTest');
+  }
+
+  Future<String?> printText(Map config) async {
+    return await methodChannel.invokeMethod<String>('printText', config);
+  }
+
+  Future<void> labelEnable(Map config) async {
+     await methodChannel.invokeMethod<String>('labelEnable', config);
+  }
+
+  Future<void> printQRCode(Map config) async {
+    await methodChannel.invokeMethod<String>('printQRCode', config);
+  }
+
+
+
+
+
+
 }

@@ -28,6 +28,29 @@ abstract class PrintPluginPlatform extends PlatformInterface {
   }
 
   Future<String?> getPlatformVersionTest() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
+    throw UnimplementedError('getPlatformVersionTest() has not been implemented.');
   }
+
+
+  Future<String?> initPrint() async {
+    throw UnimplementedError('initPrint() has not been implemented.');
+  }
+
+  Future<String?> printTest() async {
+    throw UnimplementedError('printTest() has not been implemented.');
+  }
+
+  Future<String?> printText(Map config) async {
+    throw UnimplementedError('printText() has not been implemented.');
+  }
+
+  Future<void> labelEnable(Map config) async {
+    throw UnimplementedError('labelEnable() has not been implemented.');
+  }
+
+  Future<void> printQRCode(Map config) async {
+    throw UnimplementedError('printQRCode() has not been implemented.');
+  }
+
+
 }
