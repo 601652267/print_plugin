@@ -52,5 +52,11 @@ abstract class PrintPluginPlatform extends PlatformInterface {
     throw UnimplementedError('printQRCode() has not been implemented.');
   }
 
+  Future<void> textAsBitmap(Map config) async {
+    throw UnimplementedError('textAsBitmap() has not been implemented.');
+  }
+
+
+
 
 }

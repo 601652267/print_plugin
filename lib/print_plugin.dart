@@ -22,13 +22,16 @@ class PrintPlugin {
   }
 
   Future<void> labelEnable(Map config) async {
-     PrintPluginPlatform.instance.labelEnable(config);
+    PrintPluginPlatform.instance.labelEnable(config);
   }
 
   Future<void> printQRCode(Map config) async {
     PrintPluginPlatform.instance.printQRCode(config);
   }
 
+  Future<void> textAsBitmap(Map config) async {
+    PrintPluginPlatform.instance.textAsBitmap(config);
+  }
 
   Future<bool> initPrint() async {
     if (Platform.isIOS) {

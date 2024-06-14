@@ -148,12 +148,56 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
                 data = ""; // 设置默认消息
             }
 
-            PrintUtils.printQRCode(paperWidth,align, codeSize, codeSize, data, false, size, true,true);
+            PrintUtils.printTextAsBitmap(1, PrintUtils.qrCordAsBitmap(size, paperWidth, paperHeight, data, 25), true, true);
+
+
+//            PrintUtils.printQRCode(paperWidth, align, codeSize, codeSize, data, true, size, true, true);
             result.success("true");
-        }  else {
+        } else if (call.method.equals("textAsBitmap")) {
+//            String[] textList = call.argument("textList");
+//
+            String text = call.argument("text");
+            if (text == null) {
+                text = ""; // 设置默认消息
+            }
+
+            String qrCodeStr = call.argument("qrCodeStr");
+            if (qrCodeStr == null) {
+                qrCodeStr = ""; // 设置默认消息
+            }
+
+            Integer paperWidthNumber = call.argument("paperWidth");
+            int paperWidth = 52; // 整数类型的默认值
+            if (paperWidthNumber != null) {
+                paperWidth = paperWidthNumber;
+            }
+
+            Integer paperHeightNumber = call.argument("paperHeight");
+            int paperHeight = 30; // 整数类型的默认值
+            if (paperHeightNumber != null) {
+                paperHeight = paperHeightNumber;
+            }
+
+            Integer sizeNumber = call.argument("size");
+            int size = 30; // 整数类型的默认值
+            if (sizeNumber != null) {
+                size = sizeNumber;
+            }
+            Integer lineSpacingNumber = call.argument("lineSpacing");
+            int lineSpacing = 25; // 整数类型的默认值
+            if (lineSpacingNumber != null) {
+                lineSpacing = lineSpacingNumber;
+            }
+
+
+            PrintUtils.printTextAsBitmap(1, PrintUtils.textAsBitmap(size, paperWidth, paperHeight, qrCodeStr, text, lineSpacing), true, true);
+
+
+            result.success("true");
+
+        } else {
             result.notImplemented();
         }
-
 
 
     }

@@ -44,6 +44,15 @@ import android_serialport_api.MyApp;
 import android_serialport_api.SerialPort;
 import android_serialport_api.SerialPortHelper;
 
+import java.util.Map;
+import java.util.HashMap;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import org.json.JSONException;
 
 /**
  * 请注意，整个代码中均只能使用这里的mCommonApi变量， 不能另外再重复实例化mCommonApi，否则将会出现打印延迟或者不打印，
@@ -624,8 +633,269 @@ public class PrintUtils {
         StopTestService();
 
         mSerialPort.closePort();
+    }
+
+    public static void printMuchText(Canvas canvas, TextPaint paint, String[] textList, int lineSpacing, int paperRealWidth, int paperRealHeight) {
+        float textHeight = 0;
+        ArrayList<String> texts = new ArrayList<>();
+        float yPos = 0;
+        for (int i = 0; i < textList.length; i++) {
+            String text = textList[i];
+            String str = "";
+            float currentLineWidth = 0;
+            for (int j = 0; j < text.length(); j++) {
+                String character = String.valueOf(text.charAt(j));
+
+                float wordWidth = paint.measureText(character);
+
+                float newWidth = currentLineWidth + wordWidth;
+                if (newWidth >= paperRealWidth) {
+                    // 移至下一行
+                    currentLineWidth = 0;
+                    texts.add(str);
+                    textHeight = textHeight + lineSpacing;
+                    str = character;
+                } else {
+                    currentLineWidth = newWidth;
+                    if (j == text.length() - 1) {
+                        // 到最后也没超过长度
+                        textHeight = textHeight + lineSpacing;
+                        str = str + character;
+                        texts.add(str);
+                    } else {
+                        str = str + character;
+                    }
+                }
+
+            }
+        }
+
+
+        int h = (paperRealHeight - (int) Math.round(textHeight)) / (texts.size() + 1);
+
+        int startX = 0;
+
+        int startY = 0;
+
+        for (int i = 0; i < texts.size(); i++) {
+            if (startY == 0) {
+                startY = lineSpacing + h;
+            }
+            String t = texts.get(i);
+            canvas.drawText(t, startX, startY, paint);
+            startY = startY + h + lineSpacing;
+        }
 
     }
+
+
+    public static Bitmap textAsBitmap(int size, int paperWidth, int paperHeight, final String qrCodeStr, String text, int lineSpacing) {
+
+        String[] textList = text.split("\\r?\\n");
+
+        double scale = 0.8 / 3.1;
+
+        int paperRealWidth = (int) Math.round(paperWidth * 30 * scale);
+
+        int paperRealHeight = (int) Math.round(paperHeight * 30 * scale);
+
+        TextPaint textPaint = new TextPaint();
+
+        textPaint.setColor(Color.BLACK);
+
+        textPaint.setTextSize(size);
+
+        StaticLayout layout = new StaticLayout("", textPaint, paperRealWidth,
+                Alignment.ALIGN_NORMAL, 1.3f, 0.0f, true);
+
+        int space = 0;
+
+        if (paperHeight == 50) {
+            space = 10;
+        } else if (paperHeight == 30) {
+            space = 20;
+        } else if (paperHeight == 70) {
+            space = 10;
+        }
+
+        // 创建一个位图
+        Bitmap bitmap = Bitmap.createBitmap(paperRealWidth, paperRealHeight - space, Bitmap.Config.ARGB_8888);
+        // 创建一个画面
+        Canvas canvas = new Canvas(bitmap);
+
+        canvas.drawRGB(255, 255, 255);
+
+        printMuchText(canvas, textPaint, textList, lineSpacing, paperRealWidth, paperRealHeight);
+
+        int textWidth = paperRealWidth * 2 / 3;
+
+        int leftWidth = paperRealWidth - textWidth;
+
+
+        double codeScale = 0.35;
+
+        if (paperHeight == 50) {
+            codeScale = 0.5;
+        } else if (paperHeight == 30) {
+            codeScale = 0.79;
+        } else if (paperHeight == 70) {
+            codeScale = 0.41;
+        }
+
+
+        int codeWidth = (int) Math.round(paperRealHeight * codeScale);
+
+        Bitmap bit = PrintUtils.createQRImage(qrCodeStr, codeWidth, codeWidth);
+        // 画布画个图片
+        float mapW = (float) (paperRealWidth - codeWidth + 20);
+        float mapH = (float) (paperRealHeight - codeWidth + 20);
+
+        canvas.drawBitmap(bit, mapW, mapH, textPaint);
+        layout.draw(canvas);
+        return bitmap;
+    }
+
+    public static Bitmap qrCordAsBitmap(int size, int paperWidth, int paperHeight, final String qrCodeStr, int lineSpacing) {
+
+        int paperRealWidth = 385;
+
+        int paperRealHeight = 320;
+
+        double codeScale = 0.35;
+
+        if (paperHeight == 50) {
+            paperRealWidth = 385;
+            paperRealHeight = 385;
+            codeScale = 0.6;
+        } else if (paperHeight == 30) {
+            codeScale = 0.35;
+        } else if (paperHeight == 70) {
+            codeScale = 0.8;
+        }
+
+
+        int codeWidth = (int) Math.round((paperRealHeight >= paperRealWidth ? paperRealWidth : paperRealHeight) * codeScale);
+
+
+        TextPaint textPaint = new TextPaint();
+
+        textPaint.setColor(Color.BLACK);
+
+        textPaint.setTextSize(25);
+
+        StaticLayout layout = new StaticLayout("", textPaint, paperRealWidth,
+                Alignment.ALIGN_NORMAL, 1.3f, 0.0f, true);
+
+
+        // 创建一个位图
+        Bitmap bitmap = Bitmap.createBitmap(paperRealWidth, paperRealHeight, Bitmap.Config.ARGB_8888);
+        // 创建一个画面
+        Canvas canvas = new Canvas(bitmap);
+
+        canvas.drawRGB(255, 255, 255);
+
+
+        float currentLineWidth = 0;
+
+        for (int j = 0; j < qrCodeStr.length(); j++) {
+            String character = String.valueOf(qrCodeStr.charAt(j));
+
+            float wordWidth = textPaint.measureText(character);
+
+            currentLineWidth = currentLineWidth + wordWidth;
+        }
+
+        int startX = (int) Math.round((paperRealWidth - currentLineWidth) / 2.0);
+
+
+
+        Bitmap bit = PrintUtils.createQRImage(qrCodeStr, codeWidth, codeWidth);
+
+
+        // 画布画个图片
+        float mapW = (float) ((paperRealWidth - codeWidth) / 2.0);
+        Log.d("mapW", "--------->>>>>  " + String.valueOf(mapW));
+        Log.d("codeWidth", "--------->>>>>  " + String.valueOf(codeWidth));
+        Log.d("startX", "--------->>>>>  " + String.valueOf(startX));
+        Log.d("currentLineWidth", "--------->>>>>  " + String.valueOf(currentLineWidth));
+
+
+        float mapH = (float) ((paperRealHeight - codeWidth - lineSpacing) / 2.0);;
+
+        canvas.drawText(qrCodeStr, startX, mapH + codeWidth + 10, textPaint);
+
+        canvas.drawBitmap(bit, mapW, mapH, textPaint);
+
+
+        layout.draw(canvas);
+
+        return bitmap;
+    }
+
+
+    public static void printTextAsBitmap(final int align, final Bitmap bitmap1,
+                                         final boolean isLabel, final boolean tearPape) {
+
+        send(new byte[]{0x1d, 0x61, 0x00});
+
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                // TODO Auto-generated method stub
+                if (isCanprint) {
+
+                    //初始化打印机
+                    PrintUtils.send(new byte[]{0x1B, 0x40});
+
+                    switch (align) {
+                        case 0:
+                            send(new byte[]{0x1b, 0x61, 0x00});
+                            break;
+                        case 1:
+                            send(new byte[]{0x1b, 0x61, 0x01});
+                            break;
+                        case 2:
+                            send(new byte[]{0x1b, 0x61, 0x02});
+                            break;
+                        default:
+                            break;
+                    }
+
+
+                    Bitmap bitmap = bitmap1;
+
+
+                    byte[] printData1 = draw2PxPoint(bitmap);
+
+                    // 一票一控起始指令
+                    printData1 = concat(new byte[]{0x1D, 0x23, 0x53,
+                            (byte) 0xD1, 0x7A, (byte) 0xF8, 0x4D}, printData1);
+
+                    if (tearPape && !labelEnable) {
+                        //非黑标状态打印后多加3个回车，把纸张推出来，方便撕纸
+//                        printData1 = concat(
+//                                printData1, new byte[]{0x20, 0x0a});
+                    }
+
+                    if (isLabel) {
+
+                        printData1 = concat(printData1,
+                                new byte[]{0x1D, 0x0c});
+
+                    }
+
+                    // 发送一票一控结束指令
+                    printData1 = concat(printData1, new byte[]{0x1D, 0x23,
+                            0x45});
+
+                    send(printData1);
+
+                }
+            }
+        }, 200);
+    }
+
 
     /**
      * 打印文字
@@ -729,6 +999,40 @@ public class PrintUtils {
 
     }
 
+    public static Bitmap textAsBitmapTest(float textSize) {
+
+        TextPaint textPaint = new TextPaint();
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(textSize);
+        StaticLayout layout = new StaticLayout("", textPaint, 380,
+                Alignment.ALIGN_NORMAL, 1.3f, 0.0f, true);
+        // 创建一个位图
+        Bitmap bitmap = Bitmap.createBitmap(380, 320, Bitmap.Config.ARGB_8888);
+        // 创建一个画面
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawRGB(255, 255, 255);
+        canvas.drawText("料框号:", 0, 30, textPaint);
+        canvas.drawText("123456", 80, 30, textPaint);
+        canvas.drawText("物料号:", 0, 60, textPaint);
+        canvas.drawText("_7", 120, 60, textPaint);
+        canvas.drawText("物料号描述:", 0, 90, textPaint);
+        canvas.drawText("27", 120, 90, textPaint);
+        canvas.drawText("质量类型:", 0, 120, textPaint);
+        canvas.drawText(" 6", 120, 120, textPaint);
+        canvas.drawText("数量:", 0, 150, textPaint);
+        canvas.drawText("_" + 7, 120, 150, textPaint);
+        canvas.drawText("打印人:", 0, 180, textPaint);
+        canvas.drawText("_27", 120, 180, textPaint);
+
+        Bitmap bit = PrintUtils.createQRImage("12345678", 100, 100);
+        // 画布画个图片
+        canvas.drawBitmap(bit, 310, 180, textPaint);
+        layout.draw(canvas);
+
+        return bitmap;
+    }
+
+
     /**
      * 打印图片
      *
@@ -798,7 +1102,6 @@ public class PrintUtils {
                         bitmap = twoBtmap2One1(mBitmap_write, bitmap);
 
                     }
-
                     byte[] printData1 = draw2PxPoint(bitmap);
 
                     // 一票一控起始指令
@@ -933,6 +1236,7 @@ public class PrintUtils {
             }
         }, 200);
     }
+
 
     /**
      * 打印二维码

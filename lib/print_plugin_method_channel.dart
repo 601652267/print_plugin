@@ -42,6 +42,12 @@ class MethodChannelPrintPlugin extends PrintPluginPlatform {
     await methodChannel.invokeMethod<String>('printQRCode', config);
   }
 
+  Future<void> textAsBitmap(Map config) async {
+    await methodChannel.invokeMethod<String>('textAsBitmap', config);
+  }
+
+
+
 
 
 
