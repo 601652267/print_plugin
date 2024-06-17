@@ -699,6 +699,10 @@ public class PrintUtils {
 
         int paperRealHeight = (int) Math.round(paperHeight * 30 * scale);
 
+        Log.d("paperRealWidth", "--------->>>>>  " + String.valueOf(paperRealWidth));
+        Log.d("paperRealHeight", "--------->>>>>  " + String.valueOf(paperRealHeight));
+
+
         TextPaint textPaint = new TextPaint();
 
         textPaint.setColor(Color.BLACK);
@@ -747,8 +751,8 @@ public class PrintUtils {
 
         Bitmap bit = PrintUtils.createQRImage(qrCodeStr, codeWidth, codeWidth);
         // 画布画个图片
-        float mapW = (float) (paperRealWidth - codeWidth + 20);
-        float mapH = (float) (paperRealHeight - codeWidth + 20);
+        float mapW = (float) (paperRealWidth - codeWidth + 10);
+        float mapH = (float) (paperRealHeight - codeWidth + 10);
 
         canvas.drawBitmap(bit, mapW, mapH, textPaint);
         layout.draw(canvas);
@@ -768,7 +772,7 @@ public class PrintUtils {
             paperRealHeight = 385;
             codeScale = 0.6;
         } else if (paperHeight == 30) {
-            codeScale = 0.35;
+            codeScale = 0.33;
         } else if (paperHeight == 70) {
             codeScale = 0.8;
         }
@@ -808,19 +812,15 @@ public class PrintUtils {
         int startX = (int) Math.round((paperRealWidth - currentLineWidth) / 2.0);
 
 
-
         Bitmap bit = PrintUtils.createQRImage(qrCodeStr, codeWidth, codeWidth);
 
 
         // 画布画个图片
         float mapW = (float) ((paperRealWidth - codeWidth) / 2.0);
-        Log.d("mapW", "--------->>>>>  " + String.valueOf(mapW));
-        Log.d("codeWidth", "--------->>>>>  " + String.valueOf(codeWidth));
-        Log.d("startX", "--------->>>>>  " + String.valueOf(startX));
-        Log.d("currentLineWidth", "--------->>>>>  " + String.valueOf(currentLineWidth));
 
 
-        float mapH = (float) ((paperRealHeight - codeWidth - lineSpacing) / 2.0);;
+        float mapH = (float) ((paperRealHeight - codeWidth - lineSpacing) / 2.0);
+        ;
 
         canvas.drawText(qrCodeStr, startX, mapH + codeWidth + 10, textPaint);
 

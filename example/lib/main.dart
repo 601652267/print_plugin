@@ -62,9 +62,9 @@ class _MyAppState extends State<MyApp> {
   Future<void> textAsBitmap() async {
     await _printPlugin.textAsBitmap({
       'paperWidth': 52,
-      'paperHeight': 50,
-      'lineSpacing':30,
-      'size': 25,
+      'paperHeight': 30,
+      'lineSpacing':15,
+      'size': 21,
       'text':
           '药品:阿莫西林胶囊\n车码:87hfsxzg92100\n有效期:2024-12-12\n规格:10mg\n批号:AM001\n数量:1\n药品类型:普通',
       'qrCodeStr':
@@ -140,7 +140,6 @@ class _MyAppState extends State<MyApp> {
               ),
               GestureDetector(
                 onTap: () {
-                  log(couldUse.toString());
                   if (couldUse == false) {
                     return;
                   }
