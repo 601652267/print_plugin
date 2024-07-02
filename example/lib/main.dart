@@ -34,6 +34,10 @@ class _MyAppState extends State<MyApp> {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     couldUse = await _printPlugin.initPrint();
+
+    _printPlugin.setUpMethodCallHandler((res) {
+      log(res.toString());
+    });
   }
 
   Future<void> printTest() async {
@@ -58,12 +62,16 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> openScan() async {
+    await _printPlugin.openScan({});
+  }
+
   // 50 - lineSpacing 30 - size 25 // 30 lineSpacing 15 - size 21 // 70 lineSpacing 40 - size 30
   Future<void> textAsBitmap() async {
     await _printPlugin.textAsBitmap({
       'paperWidth': 52,
       'paperHeight': 30,
-      'lineSpacing':15,
+      'lineSpacing': 15,
       'size': 21,
       'text':
           '药品:阿莫西林胶囊\n车码:87hfsxzg92100\n有效期:2024-12-12\n规格:10mg\n批号:AM001\n数量:1\n药品类型:普通',
@@ -231,6 +239,30 @@ class _MyAppState extends State<MyApp> {
                   child: Center(
                     child: Text(
                       '打印测试',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  // if (couldUse == false) {
+                  //   return;
+                  // }
+                  this.openScan();
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                  padding:
+                      EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '扫描二维码',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),

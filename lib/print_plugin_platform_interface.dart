@@ -28,9 +28,9 @@ abstract class PrintPluginPlatform extends PlatformInterface {
   }
 
   Future<String?> getPlatformVersionTest() {
-    throw UnimplementedError('getPlatformVersionTest() has not been implemented.');
+    throw UnimplementedError(
+        'getPlatformVersionTest() has not been implemented.');
   }
-
 
   Future<String?> initPrint() async {
     throw UnimplementedError('initPrint() has not been implemented.');
@@ -56,7 +56,11 @@ abstract class PrintPluginPlatform extends PlatformInterface {
     throw UnimplementedError('textAsBitmap() has not been implemented.');
   }
 
+  Future<void> openScan(Map config) async {
+    throw UnimplementedError('openScan() has not been implemented.');
+  }
 
-
-
+  void setUpMethodCallHandler(Function resolve) {
+    _instance.setUpMethodCallHandler(resolve);
+  }
 }

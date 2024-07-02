@@ -46,9 +46,19 @@ class MethodChannelPrintPlugin extends PrintPluginPlatform {
     await methodChannel.invokeMethod<String>('textAsBitmap', config);
   }
 
+  Future<void> openScan(Map config) async {
+    await methodChannel.invokeMethod<String>('openScan', config);
+  }
 
-
-
+  void setUpMethodCallHandler(Function resolve) {
+    methodChannel.setMethodCallHandler((MethodCall call) async {
+      if (call.method == 'onBroadcastReceived') {
+        String message = call.arguments;
+        resolve({'message':message});
+        // 处理接收到的广播消息
+      }
+    });
+  }
 
 
 

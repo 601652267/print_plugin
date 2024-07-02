@@ -33,6 +33,11 @@ class PrintPlugin {
     PrintPluginPlatform.instance.textAsBitmap(config);
   }
 
+  Future<void> openScan(Map config) async {
+    PrintPluginPlatform.instance.openScan(config);
+  }
+
+
   Future<bool> initPrint() async {
     if (Platform.isIOS) {
       couldUsePrint = false;
@@ -45,4 +50,9 @@ class PrintPlugin {
     }
     return true;
   }
+
+  void setUpMethodCallHandler(Function resolve) {
+    PrintPluginPlatform.instance.setUpMethodCallHandler(resolve);
+  }
+
 }
