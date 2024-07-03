@@ -49,6 +49,8 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String message = intent.getStringExtra("data");
+                Log.d("message --- ", "--------->>>>>  " + message);
+
                 channel.invokeMethod("onBroadcastReceived", message);
             }
         };

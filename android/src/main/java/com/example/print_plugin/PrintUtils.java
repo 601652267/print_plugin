@@ -207,16 +207,10 @@ public class PrintUtils {
                                                                                     .replace(
                                                                                             "�",
                                                                                             "");
-
-                                                                            Intent intentBroadcast = new Intent();
-                                                                            intentBroadcast
-                                                                                    .setAction("com.qs.scancode");
-                                                                            intentBroadcast
-                                                                                    .putExtra(
-                                                                                            "data",
-                                                                                            str);
-
-                                                                            context.sendBroadcast(intentBroadcast);
+                                                                            
+                                                                            Intent intent = new Intent("com.qs.scancode");
+                                                                            intent.putExtra("data", str);
+                                                                            context.sendBroadcast(intent);
 
                                                                             // 清空数据
                                                                             sb1.setLength(0);
@@ -385,6 +379,7 @@ public class PrintUtils {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
                         }
+                        Log.d("strRead --- ", "--------->>>>>  " + strRead);
 
                         m.obj = strRead;
                     }

@@ -36,7 +36,9 @@ class _MyAppState extends State<MyApp> {
     couldUse = await _printPlugin.initPrint();
 
     _printPlugin.setUpMethodCallHandler((res) {
+      log('message');
       log(res.toString());
+
     });
   }
 
