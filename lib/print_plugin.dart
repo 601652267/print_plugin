@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'print_plugin_platform_interface.dart';
 import 'dart:io' show Platform;
 
@@ -37,6 +39,11 @@ class PrintPlugin {
     PrintPluginPlatform.instance.openScan(config);
   }
 
+  Future<void> intentTest(Map config) async {
+    log('intentTest');
+    PrintPluginPlatform.instance.intentTest(config);
+  }
+
 
   Future<bool> initPrint() async {
     if (Platform.isIOS) {
@@ -54,5 +61,7 @@ class PrintPlugin {
   void setUpMethodCallHandler(Function resolve) {
     PrintPluginPlatform.instance.setUpMethodCallHandler(resolve);
   }
+
+
 
 }

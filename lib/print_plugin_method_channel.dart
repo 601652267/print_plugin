@@ -50,6 +50,10 @@ class MethodChannelPrintPlugin extends PrintPluginPlatform {
     await methodChannel.invokeMethod<String>('openScan', config);
   }
 
+  Future<void> intentTest(Map config) async {
+    await methodChannel.invokeMethod<String>('intentTest', config);
+  }
+
   void setUpMethodCallHandler(Function resolve) {
     methodChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'onBroadcastReceived') {

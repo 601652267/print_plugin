@@ -15,7 +15,6 @@ import android.os.Handler;
 import io.flutter.embedding.android.FlutterActivity;
 
 import android.content.Context;
-import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.MediaPlayer;
@@ -34,8 +33,6 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
     private MethodChannel channel;
     private Context context;
 
-    private BroadcastReceiver receiver;
-
     boolean isInit = false;
 
     @Override
@@ -43,26 +40,13 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
         context = flutterPluginBinding.getApplicationContext();
         channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "print_plugin");
         channel.setMethodCallHandler(this);
-
-        // 注册广播接收器
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String message = intent.getStringExtra("data");
-                Log.d("message --- ", "--------->>>>>  " + message);
-
-                channel.invokeMethod("onBroadcastReceived", message);
-            }
-        };
-        IntentFilter filter = new IntentFilter("com.qs.scancode");
-        context.registerReceiver(receiver, filter);
     }
 
     public boolean initPrint() {
         isInit = true;
         //初始化打印工具
-        boolean res = PrintUtils.initPrintUtils(context);
-        return  res;
+        boolean res = PrintUtils.initPrintUtils(context, channel);
+        return res;
     }
 
 
@@ -218,11 +202,19 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
 
         } else if (call.method.equals("openScan")) {
             PrintUtils.openScan();
-//            Intent intent = new Intent("com.qs.scancode");
-//            intent.putExtra("data", "Hello from Java!");
-//            context.sendBroadcast(intent);
             result.success("true");
-        }  else {
+        } else if (call.method.equals("intentTest")) {
+            if (context == null) {
+                Log.d("intentTest - context  --- ", "--------->>>>> null  ");
+            } else {
+                Log.d("intentTest - context  --- ", "--------->>>>> not null  ");
+            }
+            Intent intent = new Intent("com.qs.scancode");
+            intent.putExtra("data", "Hello from Java!");
+            context.sendBroadcast(intent);
+
+            result.success("true");
+        } else {
             result.notImplemented();
         }
 
@@ -233,8 +225,6 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         channel.setMethodCallHandler(null);
     }
-
-
 
 
 }

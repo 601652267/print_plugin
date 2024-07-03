@@ -54,6 +54,10 @@ import java.util.ArrayList;
 
 import org.json.JSONException;
 
+import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
+import io.flutter.plugin.common.MethodChannel.Result;
+
 /**
  * 请注意，整个代码中均只能使用这里的mCommonApi变量， 不能另外再重复实例化mCommonApi，否则将会出现打印延迟或者不打印，
  * 扫描会扫描二次或者不出扫描光的情况，请注意
@@ -63,6 +67,9 @@ import org.json.JSONException;
 public class PrintUtils {
 
     public static Context context;
+
+    public static MethodChannel channel;
+
 
     public static boolean isCanprint = false;
 
@@ -104,12 +111,14 @@ public class PrintUtils {
     public static Bitmap mBitmap_write;
 
 
-    public static boolean initPrintUtils(Context context1) {
+    public static boolean initPrintUtils(Context context1, MethodChannel channel1) {
 
         //控制GPIO口给单片机上电
         StartTestService(context1);
 
         context = context1;
+
+        channel = channel1;
 
         mApplication = new MyApp();
 
@@ -207,10 +216,11 @@ public class PrintUtils {
                                                                                     .replace(
                                                                                             "�",
                                                                                             "");
-                                                                            
-                                                                            Intent intent = new Intent("com.qs.scancode");
-                                                                            intent.putExtra("data", str);
-                                                                            context.sendBroadcast(intent);
+
+
+                                                                            channel.invokeMethod("onBroadcastReceived", str);
+
+
 
                                                                             // 清空数据
                                                                             sb1.setLength(0);

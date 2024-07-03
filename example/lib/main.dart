@@ -270,6 +270,31 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ),
               ),
+              GestureDetector(
+                onTap: () async {
+                  if (couldUse == false) {
+                    return;
+                  }
+                  await _printPlugin.intentTest({});
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                  padding:
+                  EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(5.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '通道测试',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+
             ],
           ),
         ),

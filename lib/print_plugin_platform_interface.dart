@@ -60,6 +60,10 @@ abstract class PrintPluginPlatform extends PlatformInterface {
     throw UnimplementedError('openScan() has not been implemented.');
   }
 
+  Future<void> intentTest(Map config) async {
+    throw UnimplementedError('intentTest() has not been implemented.');
+  }
+
   void setUpMethodCallHandler(Function resolve) {
     _instance.setUpMethodCallHandler(resolve);
   }
