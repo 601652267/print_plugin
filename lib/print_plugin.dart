@@ -40,7 +40,6 @@ class PrintPlugin {
   }
 
   Future<void> intentTest(Map config) async {
-    log('intentTest');
     PrintPluginPlatform.instance.intentTest(config);
   }
 

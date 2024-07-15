@@ -20,26 +20,57 @@ import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.util.Log;
 
+import android.app.Activity;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.plugin.common.PluginRegistry;
+import android.view.KeyEvent;
+import android.view.Window;
+import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.ActionMode;
+import android.view.SearchEvent;
+import android.view.WindowManager.LayoutParams;
+
 
 /**
  * PrintPlugin
  */
-public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
+public class PrintPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
 
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
+
+    private FlutterPluginBinding pluginBinding;
+
+    private Activity activity;
+
+    private ActivityPluginBinding activityBinding;
+
     private MethodChannel channel;
     private Context context;
 
     boolean isInit = false;
 
+    private long downLastKeyEventTime = 0;
+
+    private long upLastKeyEventTime = 0;
+
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+//        context = flutterPluginBinding.getApplicationContext();
+//        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "print_plugin");
+//        channel.setMethodCallHandler(this);
+
+
         context = flutterPluginBinding.getApplicationContext();
-        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "print_plugin");
-        channel.setMethodCallHandler(this);
+        this.pluginBinding = flutterPluginBinding;
+
     }
 
     public boolean initPrint() {
@@ -194,9 +225,7 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
                 lineSpacing = lineSpacingNumber;
             }
 
-
             PrintUtils.printTextAsBitmap(1, PrintUtils.textAsBitmap(size, paperWidth, paperHeight, qrCodeStr, text, lineSpacing), true, true);
-
 
             result.success("true");
 
@@ -204,11 +233,6 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
             PrintUtils.openScan();
             result.success("true");
         } else if (call.method.equals("intentTest")) {
-            if (context == null) {
-                Log.d("intentTest - context  --- ", "--------->>>>> null  ");
-            } else {
-                Log.d("intentTest - context  --- ", "--------->>>>> not null  ");
-            }
             Intent intent = new Intent("com.qs.scancode");
             intent.putExtra("data", "Hello from Java!");
             context.sendBroadcast(intent);
@@ -224,6 +248,163 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler {
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         channel.setMethodCallHandler(null);
+    }
+
+
+    @Override
+    public void onAttachedToActivity(final ActivityPluginBinding binding) {
+        this.activityBinding = binding;
+        this.activity = this.activityBinding.getActivity();
+
+        channel = new MethodChannel(this.pluginBinding.getBinaryMessenger(), "print_plugin");
+        channel.setMethodCallHandler(this);
+
+        if (activity != null) {
+            activity.getWindow().getCallback();
+            Window.Callback originalCallback = activity.getWindow().getCallback();
+            activity.getWindow().setCallback(new Window.Callback() {
+
+                @Override
+                public boolean dispatchKeyEvent(KeyEvent event) {
+                    int keyCode = event.getKeyCode();
+                    if (keyCode == 290 || keyCode == 289) {
+                        PrintUtils.openScan();
+                    }
+                    return originalCallback.dispatchKeyEvent(event);
+                }
+
+                @Override
+                public boolean dispatchKeyShortcutEvent(KeyEvent event) {
+                    return originalCallback.dispatchKeyShortcutEvent(event);
+                }
+
+                @Override
+                public boolean dispatchTouchEvent(MotionEvent event) {
+                    return originalCallback.dispatchTouchEvent(event);
+                }
+
+                @Override
+                public boolean dispatchTrackballEvent(MotionEvent event) {
+                    return originalCallback.dispatchTrackballEvent(event);
+                }
+
+                @Override
+                public boolean dispatchGenericMotionEvent(MotionEvent event) {
+                    return originalCallback.dispatchGenericMotionEvent(event);
+                }
+
+                @Override
+                public boolean dispatchPopulateAccessibilityEvent(AccessibilityEvent event) {
+                    return originalCallback.dispatchPopulateAccessibilityEvent(event);
+                }
+
+                @Override
+                public View onCreatePanelView(int featureId) {
+                    return originalCallback.onCreatePanelView(featureId);
+                }
+
+                @Override
+                public boolean onCreatePanelMenu(int featureId, Menu menu) {
+                    return originalCallback.onCreatePanelMenu(featureId, menu);
+                }
+
+                @Override
+                public boolean onPreparePanel(int featureId, View view, Menu menu) {
+                    return originalCallback.onPreparePanel(featureId, view, menu);
+                }
+
+                @Override
+                public boolean onMenuOpened(int featureId, Menu menu) {
+                    return originalCallback.onMenuOpened(featureId, menu);
+                }
+
+                @Override
+                public boolean onMenuItemSelected(int featureId, MenuItem item) {
+                    return originalCallback.onMenuItemSelected(featureId, item);
+                }
+
+                @Override
+                public void onWindowAttributesChanged(LayoutParams attrs) {
+                    originalCallback.onWindowAttributesChanged(attrs);
+                }
+
+                @Override
+                public void onContentChanged() {
+                    originalCallback.onContentChanged();
+                }
+
+                @Override
+                public void onWindowFocusChanged(boolean hasFocus) {
+                    originalCallback.onWindowFocusChanged(hasFocus);
+                }
+
+                @Override
+                public void onAttachedToWindow() {
+                    originalCallback.onAttachedToWindow();
+                }
+
+                @Override
+                public void onDetachedFromWindow() {
+                    originalCallback.onDetachedFromWindow();
+                }
+
+                @Override
+                public void onPanelClosed(int featureId, Menu menu) {
+                    originalCallback.onPanelClosed(featureId, menu);
+                }
+
+                @Override
+                public boolean onSearchRequested() {
+                    return originalCallback.onSearchRequested();
+                }
+
+                @Override
+                public boolean onSearchRequested(SearchEvent searchEvent) {
+                    return originalCallback.onSearchRequested(searchEvent);
+                }
+
+                @Override
+                public ActionMode onWindowStartingActionMode(ActionMode.Callback callback) {
+                    return originalCallback.onWindowStartingActionMode(callback);
+                }
+
+                @Override
+                public ActionMode onWindowStartingActionMode(ActionMode.Callback callback, int type) {
+                    return originalCallback.onWindowStartingActionMode(callback, type);
+                }
+
+                @Override
+                public void onActionModeStarted(ActionMode mode) {
+                    originalCallback.onActionModeStarted(mode);
+                }
+
+                @Override
+                public void onActionModeFinished(ActionMode mode) {
+                    originalCallback.onActionModeFinished(mode);
+                }
+            });
+        }
+
+    }
+
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
+        this.activityBinding = null;
+        this.channel.setMethodCallHandler(null);
+        this.channel = null;
+    }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(final ActivityPluginBinding binding) {
+        this.onAttachedToActivity(binding);
+    }
+
+
+    @Override
+    public void onDetachedFromActivity() {
+        this.activityBinding = null;
+        this.channel.setMethodCallHandler(null);
+        this.channel = null;
     }
 
 

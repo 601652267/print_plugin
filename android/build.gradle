@@ -64,6 +64,5 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation files('src/main/libs/qs601sdk.jar')
-//    implementation files('src/main/libs/core-3.5.1.jar')
     implementation 'com.google.zxing:core:3.5.0'
 }
