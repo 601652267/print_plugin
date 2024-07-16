@@ -59,8 +59,6 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler, ActivityAw
 
     private long downLastKeyEventTime = 0;
 
-    private long upLastKeyEventTime = 0;
-
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
 //        context = flutterPluginBinding.getApplicationContext();
@@ -267,9 +265,11 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler, ActivityAw
                 @Override
                 public boolean dispatchKeyEvent(KeyEvent event) {
                     int keyCode = event.getKeyCode();
-                    if (keyCode == 290 || keyCode == 289) {
+                    if ((keyCode == 290 || keyCode == 289) && downLastKeyEventTime != event.getEventTime()) {
                         PrintUtils.openScan();
+                        downLastKeyEventTime = event.getEventTime();
                     }
+
                     return originalCallback.dispatchKeyEvent(event);
                 }
 

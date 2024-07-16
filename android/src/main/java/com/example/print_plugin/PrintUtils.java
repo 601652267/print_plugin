@@ -369,6 +369,7 @@ public class PrintUtils {
                         msg = handler.obtainMessage(SHOW_RECV_DATA2);
                         msg.sendToTarget();
                         Log.e("str2", "str2：打印成功");
+                        m.obj = "";
                     } else {
 
                         if (sb1.toString().length() <= 0) {
