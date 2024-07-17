@@ -1,4 +1,6 @@
 
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -58,6 +60,7 @@ class MethodChannelPrintPlugin extends PrintPluginPlatform {
     methodChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'onBroadcastReceived') {
         String message = call.arguments;
+        log('message = ' + message);
         resolve({'message':message});
         // 处理接收到的广播消息
       }

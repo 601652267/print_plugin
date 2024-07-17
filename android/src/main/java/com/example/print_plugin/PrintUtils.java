@@ -217,10 +217,11 @@ public class PrintUtils {
                                                                                             "�",
                                                                                             "");
 
-
+                                                                            str = str
+                                                                                    .replace(
+                                                                                            "\u0000",
+                                                                                            "");
                                                                             channel.invokeMethod("onBroadcastReceived", str);
-
-
 
                                                                             // 清空数据
                                                                             sb1.setLength(0);
@@ -385,14 +386,14 @@ public class PrintUtils {
                             if (strRead.contains("�")) {
                                 strRead = new String(bt1, "UTF-8");
                             }
+                            Log.d("strRead --- ", "--------->>>>>  " + strRead);
 
+                            m.obj = strRead;
                         } catch (UnsupportedEncodingException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
+                            m.obj = "";
                         }
-                        Log.d("strRead --- ", "--------->>>>>  " + strRead);
-
-                        m.obj = strRead;
                     }
                     // m.obj = sb1.toString();
                     h.sendMessage(m);
