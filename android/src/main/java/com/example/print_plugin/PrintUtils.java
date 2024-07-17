@@ -218,9 +218,15 @@ public class PrintUtils {
                                                                                             "");
 
                                                                             str = str
-                                                                                    .replace(
+                                                                                    .replaceAll(
                                                                                             "\u0000",
                                                                                             "");
+
+                                                                            str = str
+                                                                                    .replaceAll(
+                                                                                            "\u0014\u000F",
+                                                                                            "");
+
                                                                             channel.invokeMethod("onBroadcastReceived", str);
 
                                                                             // 清空数据
