@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_scan"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <EditText
+        android:id="@+id/tv"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:text="1234567890" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/btn_printText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="打印文字 Print text"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_printBarcode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="打印一维码 barcode"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_printQRcode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="打印二维码 qrcode"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_printImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="打印图片 bitmap"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_printSelf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="自检 PrintTest"
+            android:visibility="gone"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_update"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="更新 upate"
+            android:visibility="gone"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_scan1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="扫描 SCAN"
+            android:textSize="18sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="15dp"
+            android:visibility="visible" >
+
+            <RadioGroup
+                android:id="@+id/rg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                >
+
+                <RadioButton
+                    android:id="@+id/rbtn1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="普通热敏纸 nomal"
+                    android:checked="true"
+                    />
+
+                <RadioButton
+                    android:id="@+id/rbtn2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="间隙标签纸 label"
+                    android:layout_marginLeft="20dp"
+                    />
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="visible" >
+
+            <RadioGroup
+                android:id="@+id/paper_height"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="15dp"
+                android:gravity="center"
+                >
+
+                <RadioButton
+                    android:id="@+id/paper_30_height"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="30mm 高 height"
+                    android:checked="true"
+                    />
+
+                <RadioButton
+                    android:id="@+id/paper_40_height"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="40mm 高 height"
+                    android:layout_marginLeft="40dp"
+                    />
+            </RadioGroup>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="visible" >
+
+            <RadioGroup
+                android:id="@+id/paper_width"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="15dp"
+                android:gravity="center"
+                >
+
+                <RadioButton
+                    android:id="@+id/paper_30_width"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="30mm 宽 width"
+                    android:textSize="12sp"
+                    />
+
+                <RadioButton
+                    android:id="@+id/paper_40_width"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="40mm 宽 width"
+                    android:textSize="12sp"
+                    />
+                <RadioButton
+                    android:id="@+id/paper_52_width"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="52mm 宽 width"
+                    android:textSize="12sp"
+                    android:checked="true"
+                    />
+            </RadioGroup>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/device_img"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            />
+    </LinearLayout>
+
+</LinearLayout>
