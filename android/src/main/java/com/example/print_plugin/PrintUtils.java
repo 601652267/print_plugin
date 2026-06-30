@@ -706,7 +706,50 @@ public class PrintUtils {
     }
 
 
-    public static Bitmap textAsBitmap(int size, int paperWidth, int paperHeight, final String qrCodeStr, String text, int lineSpacing) {
+    public static void printWrappedText(Canvas canvas, TextPaint paint, String[] textList, int lineSpacing, int textMaxWidth, int paperRealHeight) {
+        ArrayList<String> texts = new ArrayList<>();
+        for (int i = 0; i < textList.length; i++) {
+            String text = textList[i];
+            String str = "";
+            float currentLineWidth = 0;
+            for (int j = 0; j < text.length(); j++) {
+                String character = String.valueOf(text.charAt(j));
+                float wordWidth = paint.measureText(character);
+                float newWidth = currentLineWidth + wordWidth;
+                if (newWidth >= textMaxWidth && str.length() > 0) {
+                    texts.add(str);
+                    str = character;
+                    currentLineWidth = wordWidth;
+                } else {
+                    str = str + character;
+                    currentLineWidth = newWidth;
+                }
+            }
+            if (str.length() > 0) {
+                texts.add(str);
+            }
+        }
+
+        if (texts.size() == 0) {
+            return;
+        }
+
+        Paint.FontMetrics fontMetrics = paint.getFontMetrics();
+        int fontHeight = (int) Math.ceil(fontMetrics.descent - fontMetrics.ascent);
+        int textHeight = Math.max(lineSpacing, fontHeight);
+        int h = Math.max(0, (paperRealHeight - textHeight * texts.size()) / (texts.size() + 1));
+
+        int startX = 0;
+        int startY = h + (int) Math.ceil(-fontMetrics.ascent);
+
+        for (int i = 0; i < texts.size(); i++) {
+            String t = texts.get(i);
+            canvas.drawText(t, startX, startY, paint);
+            startY = startY + h + textHeight;
+        }
+    }
+
+    public static Bitmap textAsBitmap(int size, int paperWidth, int paperHeight, final String qrCodeStr, String text, int lineSpacing, Double inputWidth) {
 
         String[] textList = text.split("\\r?\\n");
 
@@ -746,32 +789,30 @@ public class PrintUtils {
 
         canvas.drawRGB(255, 255, 255);
 
-        printMuchText(canvas, textPaint, textList, lineSpacing, paperRealWidth, paperRealHeight);
-
-        int textWidth = paperRealWidth * 2 / 3;
-
-        int leftWidth = paperRealWidth - textWidth;
-
-
-        double codeScale = 0.35;
-
-        if (paperHeight == 50) {
-            codeScale = 0.5;
-        } else if (paperHeight == 30) {
-            codeScale = 0.79;
-        } else if (paperHeight == 70) {
-            codeScale = 0.41;
+        double width = 20;
+        if (inputWidth != null && inputWidth > 0) {
+            width = inputWidth;
         }
 
+        int qrMargin = (int) Math.round(2 * 30 * scale);
+        int codeWidth = (int) Math.round(width * 30 * scale);
+        int maxCodeWidth = Math.min(bitmap.getWidth() - qrMargin * 2, bitmap.getHeight() - qrMargin * 2);
+        codeWidth = Math.max(1, Math.min(codeWidth, maxCodeWidth));
 
-        int codeWidth = (int) Math.round(paperRealHeight * codeScale);
+        int textMaxWidth = Math.max(1, bitmap.getWidth() - codeWidth - qrMargin * 2);
+        printWrappedText(canvas, textPaint, textList, lineSpacing, textMaxWidth, bitmap.getHeight());
 
         Bitmap bit = PrintUtils.createQRImage(qrCodeStr, codeWidth, codeWidth);
+        if (bit != null && (bit.getWidth() != codeWidth || bit.getHeight() != codeWidth)) {
+            bit = Bitmap.createScaledBitmap(bit, codeWidth, codeWidth, false);
+        }
         // 画布画个图片
-        float mapW = (float) (paperRealWidth - codeWidth + 10);
-        float mapH = (float) (paperRealHeight - codeWidth + 10);
+        float mapW = (float) Math.max(qrMargin, bitmap.getWidth() - codeWidth - qrMargin);
+        float mapH = (float) Math.max(qrMargin, bitmap.getHeight() - codeWidth - qrMargin);
 
-        canvas.drawBitmap(bit, mapW, mapH, textPaint);
+        if (bit != null) {
+            canvas.drawBitmap(bit, mapW, mapH, textPaint);
+        }
         layout.draw(canvas);
         return bitmap;
     }

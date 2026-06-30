@@ -225,7 +225,13 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler, ActivityAw
                 lineSpacing = lineSpacingNumber;
             }
 
-            PrintUtils.printTextAsBitmap(1, PrintUtils.textAsBitmap(size, paperWidth, paperHeight, qrCodeStr, text, lineSpacing), true, true);
+            Number widthNumber = call.argument("width");
+            Double width = null;
+            if (widthNumber != null) {
+                width = widthNumber.doubleValue();
+            }
+
+            PrintUtils.printTextAsBitmap(1, PrintUtils.textAsBitmap(size, paperWidth, paperHeight, qrCodeStr, text, lineSpacing, width), true, true);
 
             result.success("true");
 
