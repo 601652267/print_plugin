@@ -795,11 +795,12 @@ public class PrintUtils {
         }
 
         int qrMargin = (int) Math.round(2 * 30 * scale);
+        int qrRightMargin = (int) Math.round(4 * 30 * scale);
         int codeWidth = (int) Math.round(width * 30 * scale);
-        int maxCodeWidth = Math.min(bitmap.getWidth() - qrMargin * 2, bitmap.getHeight() - qrMargin * 2);
+        int maxCodeWidth = Math.min(bitmap.getWidth() - qrMargin - qrRightMargin, bitmap.getHeight() - qrMargin * 2);
         codeWidth = Math.max(1, Math.min(codeWidth, maxCodeWidth));
 
-        int textMaxWidth = Math.max(1, bitmap.getWidth() - codeWidth - qrMargin * 2);
+        int textMaxWidth = Math.max(1, bitmap.getWidth() - codeWidth - qrMargin - qrRightMargin);
         printWrappedText(canvas, textPaint, textList, lineSpacing, textMaxWidth, bitmap.getHeight());
 
         Bitmap bit = PrintUtils.createQRImage(qrCodeStr, codeWidth, codeWidth);
@@ -807,7 +808,7 @@ public class PrintUtils {
             bit = Bitmap.createScaledBitmap(bit, codeWidth, codeWidth, false);
         }
         // 画布画个图片
-        float mapW = (float) Math.max(qrMargin, bitmap.getWidth() - codeWidth - qrMargin);
+        float mapW = (float) Math.max(qrMargin, bitmap.getWidth() - codeWidth - qrRightMargin);
         float mapH = (float) Math.max(qrMargin, bitmap.getHeight() - codeWidth - qrMargin);
 
         if (bit != null) {
