@@ -45,6 +45,20 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
+        missingDimensionStrategy "printer", "normalPrinter"
+    }
+
+    flavorDimensions "client"
+
+    productFlavors {
+        normal {
+            dimension "client"
+            missingDimensionStrategy "printer", "normalPrinter"
+        }
+        baoanPrinter {
+            dimension "client"
+            missingDimensionStrategy "printer", "baoanPrinter"
+        }
     }
 
     buildTypes {
