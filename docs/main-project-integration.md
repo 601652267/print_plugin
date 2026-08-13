@@ -179,6 +179,8 @@ Future<void> initPrintPlugin() async {
 }
 ```
 
+`initPrint()` 表示是否可用打印。`baoanPrinter` 目前只接入激光扫描 SDK，没有接入打印 SDK，所以 `initPrint()` 会返回 `false`；扫描能力请看 `couldUseScan` 或 `getScannerStatus()`。
+
 `printPlugin.couldUseScan` 表示当前 flavor 是否可用激光扫描：
 
 ```dart

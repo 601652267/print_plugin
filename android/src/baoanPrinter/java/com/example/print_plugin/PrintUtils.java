@@ -50,7 +50,7 @@ public class PrintUtils {
         methodChannel = channel;
         initScanner();
         registerScanReceiver();
-        return couldUseScan;
+        return false;
     }
 
     public static void printTest() {

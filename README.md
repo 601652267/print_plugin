@@ -18,7 +18,7 @@ samples, guidance on mobile development, and a full API reference.
 The Android plugin uses a `printer` flavor dimension to isolate vendor SDKs:
 
 - `normalPrinter`: current QS601 SDK implementation
-- `baoanPrinter`: placeholder implementation for the Baoan printer SDK
+- `baoanPrinter`: Baoan PDA scanner SDK implementation. Printing is not implemented.
 
 Apps that use their own customer flavor dimension can map each customer to one
 printer vendor with `missingDimensionStrategy`:
