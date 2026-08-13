@@ -47,3 +47,5 @@ Build examples:
 flutter build apk --flavor normal --release -t lib/main_normal.dart
 flutter build apk --flavor baoanPrinter --release -t lib/main_baoan_printer.dart
 ```
+
+主项目接入说明见 [docs/main-project-integration.md](docs/main-project-integration.md)。

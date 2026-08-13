@@ -238,6 +238,31 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler, ActivityAw
         } else if (call.method.equals("openScan")) {
             PrintUtils.openScan();
             result.success("true");
+        } else if (call.method.equals("configureScanner")) {
+            String scanAction = call.argument("scanAction");
+            String scanDataKey = call.argument("scanDataKey");
+            PrintUtils.configureScanner(scanAction, scanDataKey);
+            result.success("true");
+        } else if (call.method.equals("getScannerStatus")) {
+            result.success(PrintUtils.getScannerStatus());
+        } else if (call.method.equals("setScannerActive")) {
+            Boolean active = call.argument("active");
+            if (active == null) {
+                active = true;
+            }
+            result.success(PrintUtils.setScannerActive(active));
+        } else if (call.method.equals("setScannerKeyEnabled")) {
+            Boolean enabled = call.argument("enabled");
+            if (enabled == null) {
+                enabled = true;
+            }
+            result.success(PrintUtils.setScannerKeyEnabled(enabled));
+        } else if (call.method.equals("restoreScanner")) {
+            result.success(PrintUtils.restoreScanner());
+        } else if (call.method.equals("startScan")) {
+            result.success(PrintUtils.startScan());
+        } else if (call.method.equals("stopScan")) {
+            result.success(PrintUtils.stopScan());
         } else if (call.method.equals("intentTest")) {
             Intent intent = new Intent("com.qs.scancode");
             intent.putExtra("data", "Hello from Java!");
@@ -253,7 +278,10 @@ public class PrintPlugin implements FlutterPlugin, MethodCallHandler, ActivityAw
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        channel.setMethodCallHandler(null);
+        PrintUtils.dispose();
+        if (channel != null) {
+            channel.setMethodCallHandler(null);
+        }
     }
 
 

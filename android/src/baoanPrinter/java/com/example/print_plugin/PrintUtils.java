@@ -10,23 +10,47 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
 import android.text.TextPaint;
+import android.text.TextUtils;
 import android.util.Log;
+
+import com.android.scanner.impl.ReaderManager;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.flutter.plugin.common.MethodChannel;
 
 public class PrintUtils {
     private static final String TAG = "PrintUtilsBaoanPrinter";
-    private static final String SCANNER_ACTION = "com.scanner.broadcast";
-    private static final String SCANNER_DATA_KEY = "data";
+    private static final String DEFAULT_SCAN_ACTION = "com.scanner.broadcast";
+    private static final String DEFAULT_SCAN_DATA_KEY = "data";
+    private static final String LEGACY_SCAN_ACTION = "com.android.server.scannerservice.broadcast";
+    private static final String LEGACY_SCAN_DATA_KEY = "scannerdata";
+    private static final String EXTRA_CODE_TYPE = "codetype";
+    private static final int OUTPUT_MODE_API = 2;
+    private static final int END_CHAR_NONE = 3;
+
     private static BroadcastReceiver scanReceiver;
     private static Context appContext;
     private static MethodChannel methodChannel;
+    private static ReaderManager readerManager;
+    private static boolean couldUseScan;
+    private static boolean receiverRegistered;
+    private static boolean capturedOriginalSettings;
+    private static String scanAction = DEFAULT_SCAN_ACTION;
+    private static String scanDataKey = DEFAULT_SCAN_DATA_KEY;
+    private static boolean originalActive;
+    private static boolean originalScanKeyEnabled;
+    private static int originalOutputMode = OUTPUT_MODE_API;
+    private static int originalEndCharMode = END_CHAR_NONE;
 
     public static boolean initPrintUtils(Context context, MethodChannel channel) {
         appContext = context.getApplicationContext();
         methodChannel = channel;
+        initScanner();
         registerScanReceiver();
-        return true;
+        return couldUseScan;
     }
 
     public static void printTest() {
@@ -43,37 +67,319 @@ public class PrintUtils {
     }
 
     public static void openScan() {
-        Log.w(TAG, "openScan is controlled by the PDA scanner service for baoanPrinter.");
+        startScan();
+    }
+
+    public static void configureScanner(String inputScanAction, String inputScanDataKey) {
+        scanAction = normalizeConfigValue(inputScanAction, scanAction);
+        scanDataKey = normalizeConfigValue(inputScanDataKey, scanDataKey);
+        restartScanReceiver();
+    }
+
+    public static Map<String, Object> getScannerStatus() {
+        if (!couldUseScan || readerManager == null || !hasBoundScannerService(readerManager)) {
+            initScanner();
+        }
+
+        Map<String, Object> status = new HashMap<String, Object>();
+        status.put("couldUseScan", couldUseScan);
+        status.put("flavor", "baoanPrinter");
+        status.put("scanAction", scanAction);
+        status.put("scanDataKey", scanDataKey);
+
+        if (!couldUseScan || readerManager == null) {
+            status.put("message", "Baoan scanner service is not available.");
+            return status;
+        }
+
+        try {
+            status.put("binderBound", hasBoundScannerService(readerManager));
+            status.put("serviceRunning", appContext != null && readerManager.isServiceRunning(appContext));
+            status.put("active", readerManager.GetActive());
+            status.put("scanKeyEnabled", readerManager.isEnableScankey());
+            status.put("outputMode", readerManager.getOutPutMode());
+            status.put("endCharMode", readerManager.getEndCharMode());
+            status.put("scannerModel", safeText(ReaderManager.getScannerModel()));
+            status.put("scannerType", safeText(ReaderManager.getScannertype()));
+        } catch (Throwable e) {
+            Log.e(TAG, "getScannerStatus failed", e);
+            status.put("message", safeErrorText(e));
+            if (!hasBoundScannerService(readerManager)) {
+                releaseReaderManagerOnly();
+                status.put("couldUseScan", false);
+            }
+        }
+        return status;
+    }
+
+    public static Boolean setScannerActive(boolean active) {
+        if (!ensureScannerUsable()) {
+            return false;
+        }
+        try {
+            return readerManager.SetActive(active);
+        } catch (Throwable e) {
+            Log.e(TAG, "setScannerActive failed", e);
+            return false;
+        }
+    }
+
+    public static Boolean setScannerKeyEnabled(boolean enabled) {
+        if (!ensureScannerUsable()) {
+            return false;
+        }
+        try {
+            readerManager.setEnableScankey(enabled);
+            return readerManager.isEnableScankey() == enabled;
+        } catch (Throwable e) {
+            Log.e(TAG, "setScannerKeyEnabled failed", e);
+            return false;
+        }
+    }
+
+    public static Boolean restoreScanner() {
+        if (!ensureScannerUsable()) {
+            return false;
+        }
+        try {
+            readerManager.SetActive(true);
+            readerManager.setEnableScankey(true);
+            readerManager.setOutPutMode(OUTPUT_MODE_API);
+            readerManager.setEndCharMode(END_CHAR_NONE);
+            return readerManager.GetActive() && readerManager.isEnableScankey();
+        } catch (Throwable e) {
+            Log.e(TAG, "restoreScanner failed", e);
+            return false;
+        }
+    }
+
+    public static Boolean startScan() {
+        if (!ensureScannerUsable()) {
+            return false;
+        }
+        try {
+            if (!readerManager.GetActive()) {
+                readerManager.SetActive(true);
+            }
+            readerManager.setOutPutMode(OUTPUT_MODE_API);
+            readerManager.setEndCharMode(END_CHAR_NONE);
+            return readerManager.beginScanAndDeocde();
+        } catch (Throwable e) {
+            Log.e(TAG, "startScan failed", e);
+            return false;
+        }
+    }
+
+    public static Boolean stopScan() {
+        if (!ensureScannerUsable()) {
+            return false;
+        }
+        try {
+            return readerManager.stopScanAndDecode();
+        } catch (Throwable e) {
+            Log.e(TAG, "stopScan failed", e);
+            return false;
+        }
+    }
+
+    public static void dispose() {
+        unregisterScanReceiver();
+        restoreOriginalScannerSettings();
+    }
+
+    private static void initScanner() {
+        try {
+            couldUseScan = false;
+            capturedOriginalSettings = false;
+            readerManager = ReaderManager.getInstance();
+            if (readerManager == null) {
+                Log.w(TAG, "ReaderManager init failed.");
+                return;
+            }
+
+            if (!hasBoundScannerService(readerManager)) {
+                releaseReaderManagerOnly();
+                Log.w(TAG, "Baoan scanner binder service is not bound.");
+                return;
+            }
+
+            couldUseScan = true;
+            try {
+                originalActive = readerManager.GetActive();
+                originalOutputMode = readerManager.getOutPutMode();
+                originalEndCharMode = readerManager.getEndCharMode();
+                originalScanKeyEnabled = readerManager.isEnableScankey();
+                capturedOriginalSettings = true;
+            } catch (Throwable e) {
+                Log.e(TAG, "read original scanner settings failed", e);
+            }
+
+            restoreScanner();
+        } catch (Throwable e) {
+            Log.e(TAG, "initScanner failed", e);
+            releaseReaderManagerOnly();
+        }
+    }
+
+    private static boolean ensureScannerUsable() {
+        if (couldUseScan && readerManager != null && hasBoundScannerService(readerManager)) {
+            return true;
+        }
+        initScanner();
+        return couldUseScan && readerManager != null;
     }
 
     private static void registerScanReceiver() {
-        if (appContext == null || scanReceiver != null) {
+        if (appContext == null || receiverRegistered) {
             return;
         }
 
         scanReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (intent == null || !SCANNER_ACTION.equals(intent.getAction())) {
+                if (intent == null) {
                     return;
                 }
 
-                String code = intent.getStringExtra(SCANNER_DATA_KEY);
-                Log.d(TAG, "scan result: " + code);
+                String action = intent.getAction();
+                if (!scanAction.equals(action) && !LEGACY_SCAN_ACTION.equals(action)) {
+                    return;
+                }
+
+                String dataKey = scanAction.equals(action) ? scanDataKey : LEGACY_SCAN_DATA_KEY;
+                String code = intent.getStringExtra(dataKey);
+                if (code == null && !LEGACY_SCAN_DATA_KEY.equals(dataKey)) {
+                    code = intent.getStringExtra(LEGACY_SCAN_DATA_KEY);
+                }
+                if (code == null && !DEFAULT_SCAN_DATA_KEY.equals(dataKey)) {
+                    code = intent.getStringExtra(DEFAULT_SCAN_DATA_KEY);
+                }
+                String codeType = intent.getStringExtra(EXTRA_CODE_TYPE);
+
+                Log.d(TAG, "scan result: " + code + ", codeType: " + codeType + ", action: " + action);
 
                 if (code != null && methodChannel != null) {
-                    methodChannel.invokeMethod("onBroadcastReceived", code);
+                    Map<String, Object> payload = new HashMap<String, Object>();
+                    payload.put("message", code);
+                    payload.put("codeType", codeType);
+                    payload.put("action", action);
+                    payload.put("dataKey", dataKey);
+                    methodChannel.invokeMethod("onBroadcastReceived", payload);
+                }
+
+                if (couldUseScan && readerManager != null) {
+                    try {
+                        readerManager.stopScanAndDecode();
+                    } catch (Throwable e) {
+                        Log.e(TAG, "stopScanAndDecode after receive failed", e);
+                    }
                 }
             }
         };
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(SCANNER_ACTION);
+        filter.addAction(scanAction);
+        if (!LEGACY_SCAN_ACTION.equals(scanAction)) {
+            filter.addAction(LEGACY_SCAN_ACTION);
+        }
         if (Build.VERSION.SDK_INT >= 33) {
             appContext.registerReceiver(scanReceiver, filter, Context.RECEIVER_EXPORTED);
         } else {
             appContext.registerReceiver(scanReceiver, filter);
         }
+        receiverRegistered = true;
+    }
+
+    private static void restartScanReceiver() {
+        unregisterScanReceiver();
+        registerScanReceiver();
+    }
+
+    private static void unregisterScanReceiver() {
+        if (!receiverRegistered || appContext == null || scanReceiver == null) {
+            return;
+        }
+        try {
+            appContext.unregisterReceiver(scanReceiver);
+        } catch (Throwable e) {
+            Log.e(TAG, "unregisterScanReceiver failed", e);
+        } finally {
+            receiverRegistered = false;
+            scanReceiver = null;
+        }
+    }
+
+    private static boolean hasBoundScannerService(ReaderManager manager) {
+        if (manager == null) {
+            return false;
+        }
+
+        Class<?> currentClass = manager.getClass();
+        while (currentClass != null) {
+            try {
+                Field serviceField = currentClass.getDeclaredField("mService");
+                serviceField.setAccessible(true);
+                return serviceField.get(null) != null;
+            } catch (NoSuchFieldException e) {
+                currentClass = currentClass.getSuperclass();
+            } catch (Throwable e) {
+                Log.e(TAG, "check scanner binder service failed", e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private static void restoreOriginalScannerSettings() {
+        if (readerManager == null) {
+            return;
+        }
+        try {
+            if (couldUseScan && capturedOriginalSettings) {
+                readerManager.stopScanAndDecode();
+                readerManager.setOutPutMode(originalOutputMode);
+                readerManager.setEndCharMode(originalEndCharMode);
+                readerManager.setEnableScankey(originalScanKeyEnabled);
+                readerManager.SetActive(originalActive);
+            }
+            readerManager.Release();
+        } catch (Throwable e) {
+            Log.e(TAG, "restoreOriginalScannerSettings failed", e);
+        } finally {
+            readerManager = null;
+            couldUseScan = false;
+            capturedOriginalSettings = false;
+        }
+    }
+
+    private static void releaseReaderManagerOnly() {
+        if (readerManager == null) {
+            return;
+        }
+        try {
+            readerManager.Release();
+        } catch (Throwable e) {
+            Log.e(TAG, "releaseReaderManagerOnly failed", e);
+        } finally {
+            readerManager = null;
+        }
+    }
+
+    private static String normalizeConfigValue(String value, String fallback) {
+        String trimmed = value == null ? "" : value.trim();
+        return TextUtils.isEmpty(trimmed) ? fallback : trimmed;
+    }
+
+    private static String safeText(String value) {
+        return TextUtils.isEmpty(value) ? "" : value;
+    }
+
+    private static String safeErrorText(Throwable throwable) {
+        String message = throwable.getMessage();
+        if (!TextUtils.isEmpty(message)) {
+            return message;
+        }
+        return throwable.getClass().getSimpleName();
     }
 
     public static Bitmap qrCordAsBitmap(int size, int paperWidth, int paperHeight,

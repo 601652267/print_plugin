@@ -1,10 +1,8 @@
 package com.example.print_plugin;
 
 import android.content.ComponentName;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -14,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.os.Handler;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.Message;
 import android.text.Layout.Alignment;
@@ -68,11 +65,6 @@ import io.flutter.plugin.common.MethodChannel.Result;
  * @author wsl
  */
 public class PrintUtils {
-    private static final String TAG = "PrintUtilsNormalPrinter";
-    private static final String SCANNER_ACTION = "com.scanner.broadcast";
-    private static final String SCANNER_DATA_KEY = "data";
-    private static BroadcastReceiver scanReceiver;
-
     public static Context context;
 
     public static MethodChannel channel;
@@ -92,6 +84,7 @@ public class PrintUtils {
     // private static String strRead;
     public static boolean isCanScan = true;
     // GreenOnReceiver greenOnReceiver;
+    private static boolean couldUseScan = false;
 
     // 扫描信息解码方式
     public static String decode = "GBK";
@@ -121,7 +114,7 @@ public class PrintUtils {
     public static boolean initPrintUtils(Context context1, MethodChannel channel1) {
         context = context1;
         channel = channel1;
-        registerScanReceiver();
+        couldUseScan = false;
 
         //控制GPIO口给单片机上电
         boolean success = StartTestService(context1);
@@ -158,37 +151,8 @@ public class PrintUtils {
 
         mBitmap_write = BitmapFactory.decodeResource(context.getResources(),
                 R.drawable.write);
+        couldUseScan = true;
         return true;
-    }
-
-    private static void registerScanReceiver() {
-        if (context == null || scanReceiver != null) {
-            return;
-        }
-
-        scanReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context receiverContext, Intent intent) {
-                if (intent == null || !SCANNER_ACTION.equals(intent.getAction())) {
-                    return;
-                }
-
-                String code = intent.getStringExtra(SCANNER_DATA_KEY);
-                Log.d(TAG, "scan result: " + code);
-
-                if (code != null && channel != null) {
-                    channel.invokeMethod("onBroadcastReceived", code);
-                }
-            }
-        };
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(SCANNER_ACTION);
-        if (Build.VERSION.SDK_INT >= 33) {
-            context.registerReceiver(scanReceiver, filter, Context.RECEIVER_EXPORTED);
-        } else {
-            context.registerReceiver(scanReceiver, filter);
-        }
     }
 
     public static void init() {
@@ -488,6 +452,46 @@ public class PrintUtils {
         }
 
 
+    }
+
+    public static void configureScanner(String scanAction, String scanDataKey) {
+        Log.w("PrintUtilsNormalPrinter", "configureScanner is not supported for normalPrinter.");
+    }
+
+    public static Map<String, Object> getScannerStatus() {
+        Map<String, Object> status = new HashMap<String, Object>();
+        status.put("couldUseScan", couldUseScan);
+        status.put("flavor", "normalPrinter");
+        status.put("message", "normalPrinter uses the QS601 scan implementation.");
+        return status;
+    }
+
+    public static Boolean setScannerActive(boolean active) {
+        Log.w("PrintUtilsNormalPrinter", "setScannerActive is not supported for normalPrinter.");
+        return null;
+    }
+
+    public static Boolean setScannerKeyEnabled(boolean enabled) {
+        Log.w("PrintUtilsNormalPrinter", "setScannerKeyEnabled is not supported for normalPrinter.");
+        return null;
+    }
+
+    public static Boolean restoreScanner() {
+        Log.w("PrintUtilsNormalPrinter", "restoreScanner is not supported for normalPrinter.");
+        return null;
+    }
+
+    public static Boolean startScan() {
+        openScan();
+        return true;
+    }
+
+    public static Boolean stopScan() {
+        Log.w("PrintUtilsNormalPrinter", "stopScan is not supported for normalPrinter.");
+        return null;
+    }
+
+    public static void dispose() {
     }
 
     public static void initGPIO() {

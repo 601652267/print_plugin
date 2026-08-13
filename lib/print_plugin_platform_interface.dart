@@ -60,6 +60,35 @@ abstract class PrintPluginPlatform extends PlatformInterface {
     throw UnimplementedError('openScan() has not been implemented.');
   }
 
+  Future<void> configureScanner(Map config) async {
+    throw UnimplementedError('configureScanner() has not been implemented.');
+  }
+
+  Future<Map?> getScannerStatus() async {
+    throw UnimplementedError('getScannerStatus() has not been implemented.');
+  }
+
+  Future<bool?> setScannerActive(Map config) async {
+    throw UnimplementedError('setScannerActive() has not been implemented.');
+  }
+
+  Future<bool?> setScannerKeyEnabled(Map config) async {
+    throw UnimplementedError(
+        'setScannerKeyEnabled() has not been implemented.');
+  }
+
+  Future<bool?> restoreScanner() async {
+    throw UnimplementedError('restoreScanner() has not been implemented.');
+  }
+
+  Future<bool?> startScan() async {
+    throw UnimplementedError('startScan() has not been implemented.');
+  }
+
+  Future<bool?> stopScan() async {
+    throw UnimplementedError('stopScan() has not been implemented.');
+  }
+
   Future<void> intentTest(Map config) async {
     throw UnimplementedError('intentTest() has not been implemented.');
   }

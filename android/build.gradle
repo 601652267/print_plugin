@@ -76,4 +76,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     normalPrinterImplementation files('src/normalPrinter/libs/qs601sdk.jar')
     normalPrinterImplementation 'com.google.zxing:core:3.5.0'
+    baoanPrinterImplementation files('src/baoanPrinter/libs/ReaderManager.jar')
 }
