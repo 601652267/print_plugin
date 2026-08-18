@@ -19,6 +19,7 @@ The Android plugin uses a `printer` flavor dimension to isolate vendor SDKs:
 
 - `normalPrinter`: current QS601 SDK implementation
 - `baoanPrinter`: Baoan PDA scanner SDK implementation. Printing is not implemented.
+- `baoanPrinter2`: broadcast-only Baoan scanner implementation. Printing and SDK controls are not implemented.
 
 Apps that use their own customer flavor dimension can map each customer to one
 printer vendor with `missingDimensionStrategy`:
@@ -37,6 +38,11 @@ android {
             dimension "client"
             missingDimensionStrategy "printer", "baoanPrinter"
         }
+
+        baoanPrinter2 {
+            dimension "client"
+            missingDimensionStrategy "printer", "baoanPrinter2"
+        }
     }
 }
 ```
@@ -46,6 +52,7 @@ Build examples:
 ```bash
 flutter build apk --flavor normal --release -t lib/main_normal.dart
 flutter build apk --flavor baoanPrinter --release -t lib/main_baoan_printer.dart
+flutter build apk --flavor baoanPrinter2 --release -t lib/main_baoan_printer2.dart
 ```
 
 主项目接入说明见 [docs/main-project-integration.md](docs/main-project-integration.md)。

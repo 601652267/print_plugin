@@ -59,6 +59,10 @@ android {
             dimension "client"
             missingDimensionStrategy "printer", "baoanPrinter"
         }
+        baoanPrinter2 {
+            dimension "client"
+            missingDimensionStrategy "printer", "baoanPrinter2"
+        }
     }
 
     buildTypes {

@@ -35,6 +35,7 @@ flutter pub upgrade print_plugin
 ```text
 normalPrinter  -> QS601 老厂家打印 SDK
 baoanPrinter   -> 宝安 PDA ReaderManager.jar + 广播扫码实现
+baoanPrinter2  -> 宝安 PDA 纯广播扫码实现，不引入厂家 jar
 ```
 
 当前广播扫码信息：
@@ -44,7 +45,7 @@ Action: com.scanner.broadcast
 Extra: data
 ```
 
-`baoanPrinter` 监听该广播，并额外兼容厂家文档里的 `com.android.server.scannerservice.broadcast` / `scannerdata`。`normalPrinter` 不再监听这套宝安广播。
+`baoanPrinter` 监听该广播，并额外兼容厂家文档里的 `com.android.server.scannerservice.broadcast` / `scannerdata`。`baoanPrinter2` 只监听当前配置的广播，默认监听 `com.scanner.broadcast` / `data`，不引入 `ReaderManager.jar`。`normalPrinter` 不再监听这套宝安广播。
 
 ## 3. 主项目 Android 配置
 
@@ -76,6 +77,12 @@ android {
             dimension "client"
             // 特定客户使用宝安 PDA 实现
             missingDimensionStrategy "printer", "baoanPrinter"
+        }
+
+        baoan2 {
+            dimension "client"
+            // 只需要接收厂家广播，不需要接入厂家 jar 控制扫描头时使用
+            missingDimensionStrategy "printer", "baoanPrinter2"
         }
     }
 }
@@ -127,6 +134,12 @@ missingDimensionStrategy "printer", "baoanPrinter"
 baoanPrinterImplementation files('src/baoanPrinter/libs/ReaderManager.jar')
 ```
 
+```gradle
+missingDimensionStrategy "printer", "baoanPrinter2"
+```
+
+不会把 QS601 SDK 或宝安 `ReaderManager.jar` 打进 APK，只会使用插件内的广播接收实现。
+
 如果某个主项目 flavor 例如 `kc` 什么都没有配置，但 `defaultConfig` 写了：
 
 ```gradle
@@ -135,7 +148,7 @@ missingDimensionStrategy "printer", "normalPrinter"
 
 那么 `kc` 会默认使用 `normalPrinter`，也会把 QS601 SDK 打进 APK。
 
-如果 `defaultConfig` 和 `kc` 都没有配置 `missingDimensionStrategy`，Gradle 会不知道插件应该选择 `normalPrinter` 还是 `baoanPrinter`，通常会编译失败。
+如果 `defaultConfig` 和 `kc` 都没有配置 `missingDimensionStrategy`，Gradle 会不知道插件应该选择 `normalPrinter`、`baoanPrinter` 还是 `baoanPrinter2`，通常会编译失败。
 
 ## 5. 打包命令
 
@@ -158,9 +171,16 @@ flutter build apk --flavor baoan --release -t lib/main_baoan.dart
 ```bash
 fvm flutter build apk --flavor kc --release -t lib/main_kc.dart
 fvm flutter build apk --flavor baoan --release -t lib/main_baoan.dart
+fvm flutter build apk --flavor baoan2 --release -t lib/main_baoan2.dart
 ```
 
-`--flavor` 使用的是主项目的客户 flavor 名，不是插件的 `normalPrinter` 或 `baoanPrinter`。插件厂商实现由 `missingDimensionStrategy` 选择。
+例如 `baoan2`：
+
+```bash
+flutter build apk --flavor baoan2 --release -t lib/main_baoan2.dart
+```
+
+`--flavor` 使用的是主项目的客户 flavor 名，不是插件的 `normalPrinter`、`baoanPrinter` 或 `baoanPrinter2`。插件厂商实现由 `missingDimensionStrategy` 选择。
 
 ## 6. Dart 初始化与扫码回调
 
@@ -188,6 +208,20 @@ final status = await printPlugin.getScannerStatus();
 final couldUseScan = printPlugin.couldUseScan;
 ```
 
+`baoanPrinter2` 的 `getScannerStatus()` 只表示 App 是否已经成功注册广播接收器：
+
+```dart
+{
+  'flavor': 'baoanPrinter2',
+  'couldUseScan': true,
+  'receiverRegistered': true,
+  'scanAction': 'com.scanner.broadcast',
+  'scanDataKey': 'data'
+}
+```
+
+它不接厂家 jar，所以不能通过插件判断厂家扫码服务是否运行、激光头是否开启或物理扫描键是否启用。
+
 返回含义：
 
 ```text
@@ -199,7 +233,13 @@ null   当前平台或 flavor 没有提供扫描状态
 收到 PDA 广播后，插件会回调：
 
 ```dart
-{'message': 'D2393235398C'}
+{
+  'message': 'D2393235398C',
+  'action': 'com.scanner.broadcast',
+  'dataKey': 'data',
+  'flavor': 'baoanPrinter2',
+  'extras': {'data': 'D2393235398C'}
+}
 ```
 
 如果只需要触发老设备扫描按键，可以继续调用：
@@ -208,7 +248,7 @@ null   当前平台或 flavor 没有提供扫描状态
 await printPlugin.openScan({});
 ```
 
-对于 `baoanPrinter`，可以动态配置广播参数：
+对于 `baoanPrinter` 和 `baoanPrinter2`，可以动态配置广播参数：
 
 ```dart
 await printPlugin.configureScanner(
@@ -217,7 +257,7 @@ await printPlugin.configureScanner(
 );
 ```
 
-也可以控制扫描头：
+对于 `baoanPrinter`，也可以控制扫描头：
 
 ```dart
 await printPlugin.setScannerActive(true);
@@ -227,7 +267,9 @@ await printPlugin.startScan();
 await printPlugin.stopScan();
 ```
 
-从相机扫码页面退出后，可以调用：
+`baoanPrinter2` 是纯广播实现，不接厂家 jar，所以 `setScannerActive()`、`startScan()`、`stopScan()`、`restoreScanner()` 会返回 `null`。它只负责接收广播并通过 `onBroadcastReceived` 把码值返回给 Flutter。
+
+对于 `baoanPrinter`，从相机扫码页面退出后，可以调用：
 
 ```dart
 await printPlugin.restoreScanner();
